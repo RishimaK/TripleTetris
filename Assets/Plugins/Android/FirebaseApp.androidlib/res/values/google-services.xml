@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+  <string name="gcm_defaultSenderId" translatable="false">527562030313</string>
+  <string name="google_storage_bucket" translatable="false">tile-tetris-giang.firebasestorage.app</string>
+  <string name="project_id" translatable="false">tile-tetris-giang</string>
+  <string name="google_api_key" translatable="false">AIzaSyBu1WnL5J6N_rAskD_O06WIIp1CseYjsLI</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBu1WnL5J6N_rAskD_O06WIIp1CseYjsLI</string>
+  <string name="google_app_id" translatable="false">1:527562030313:android:5f269365a3cb5928964478</string>
+</resources>

@@ -1,0 +1,11 @@
+skeleton.png
+size:260,138
+filter:Linear,Linear
+pma:true
+ic_gift1
+bounds:2,3,132,133
+offsets:3,3,138,139
+ic_gift2
+bounds:136,2,134,122
+offsets:3,3,140,128
+rotate:90
