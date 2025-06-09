@@ -330,12 +330,15 @@ public class IAP : MonoBehaviour, IDetailedStoreListener
             string receipt = product.receipt;
             data = JsonUtility.FromJson<Data>(receipt);
             int quantity = 1;
+
+            #if UNITY_ANDROID
             if (data.Payload != "ThisIsFakeReceiptData")
             {
                 payload = JsonUtility.FromJson<Payload>(data.Payload);
                 payloadData = JsonUtility.FromJson<PayloadData>(payload.json);
                 quantity = payloadData.quantity;
             }
+            #endif
 
             for (int i = 0; i < quantity; i++)
             {
