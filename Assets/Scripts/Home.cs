@@ -26,7 +26,7 @@ public class Home : MonoBehaviour
 
     public void StartGameBtn(SkeletonGraphic btn)
     {
-        Spine.TrackEntry trackEntry  = btn.AnimationState.SetAnimation(0, "Start",false);
+        Spine.TrackEntry trackEntry = btn.AnimationState.SetAnimation(0, "Start", false);
         Invoke("StartGame", trackEntry.Animation.Duration);
     }
 

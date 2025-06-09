@@ -53,6 +53,11 @@ public class Setting : MonoBehaviour
         });
     }
 
+    void ContinueGame()
+    {
+        gameManager.ContinueGame();
+    }
+
     void CheckStatus()
     {
         PlayerData data = saveDataJson.GetData();
@@ -83,7 +88,7 @@ public class Setting : MonoBehaviour
     public void Exit()
     {
         CloseDialog();
-        gameManager.ContinueGame();
+        Invoke("ContinueGame", 0.2f);
     }
 
     public void GoToHome()

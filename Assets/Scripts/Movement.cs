@@ -80,9 +80,9 @@ public class Movement : MonoBehaviour
             listNewPosition.Add(new Vector3(newX, newY, currentLocalPos.z));
         }
 
-        if(!blockCreator.CheckBlockTouchWhenRotate(listNewPosition, transform)) return;
+        if (!blockCreator.CheckBlockTouchWhenRotate(listNewPosition, transform)) return;
 
-        for(int i = 0; i < listNewPosition.Count; i++)
+        for (int i = 0; i < listNewPosition.Count; i++)
         {
             transform.GetChild(i).localPosition = listNewPosition[i];
         }
@@ -95,7 +95,7 @@ public class Movement : MonoBehaviour
         foreach (Transform child in transform)
         {
             float childPositionX = child.position.x + nextPositionX;
-            if (Math.Round(childPositionX - min) < 0 || 
+            if (Math.Round(childPositionX - min) < 0 ||
                 Math.Round(max - childPositionX) < 0) return false;
         }
         return blockCreator.CheckBlockTouch(nextPositionX, transform, -speed * timer);
@@ -111,15 +111,15 @@ public class Movement : MonoBehaviour
         if (!allowMoveDown) return;
         float distance = -speed * timer;
         float trueDistance = blockCreator.CheckNextPosition(distance);
-        if(trueDistance == distance)
+        if (trueDistance == distance)
         {
             waitTime = 0.1f;
             transform.position += new Vector3(0, trueDistance, 0);
         }
         else
         {
-            if(waitTime == 0.1f) transform.position += new Vector3(0, trueDistance, 0);
-            if(waitTime > 0)
+            if (waitTime == 0.1f) transform.position += new Vector3(0, trueDistance, 0);
+            if (waitTime > 0)
             {
                 waitTime -= Time.deltaTime;
                 return;
@@ -127,6 +127,7 @@ public class Movement : MonoBehaviour
             else
             {
                 allowMoveDown = false;
+                StopTrailRenderer();
                 blockCreator.LockPlayerBlock();
             }
         }
@@ -140,13 +141,13 @@ public class Movement : MonoBehaviour
     void Update()
     {
         CheckBlockMove();
-        if(!enabledTouch) return;
-        if(Input.touchCount > 0)
+        if (!enabledTouch) return;
+        if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
             TouchPhase touchPhase = touch.phase;
             CurrentTouch = ConvertPixelToWorldUnit(touch.position);
-            if(CurrentTouch.y > LimitHeightTouch.x || CurrentTouch.y < LimitHeightTouch.y) return;
+            if (CurrentTouch.y > LimitHeightTouch.x || CurrentTouch.y < LimitHeightTouch.y) return;
             if (touchPhase == TouchPhase.Began)
             {
                 PastTouch = ConvertPixelToWorldUnit(touch.position);
@@ -158,7 +159,7 @@ public class Movement : MonoBehaviour
             {
                 countTimetouch += Time.deltaTime;
 
-                if(Mathf.Abs(PastTouch.x - CurrentTouch.x) >= blockSize)
+                if (Mathf.Abs(PastTouch.x - CurrentTouch.x) >= blockSize)
                 {
                     TouchMove = true;
                     speed = 5;
@@ -175,23 +176,23 @@ public class Movement : MonoBehaviour
                         PastTouch += new Vector2(blockSize, 0);
                     }
                 }
-                else if(PastTouch.y > CurrentTouch.y)
+                else if (PastTouch.y > CurrentTouch.y)
                 {
                     // move down
                     // if(PastTouch.y - CurrentTouch.y >= blockSize)
                     // {
-                        speed = 70;
-                        TouchMove = true;
-                        // PastTouch -= new Vector2(0, blockSize);
+                    speed = 70;
+                    TouchMove = true;
+                    // PastTouch -= new Vector2(0, blockSize);
                     // }
                 }
             }
-            else if(touchPhase == TouchPhase.Stationary)
+            else if (touchPhase == TouchPhase.Stationary)
             {
-                if(speed == 70) StationaryTouch = true;
-                if(TouchMove)
+                if (speed == 70) StationaryTouch = true;
+                if (TouchMove)
                 {
-                    if(Mathf.Abs(PastTouch.x - CurrentTouch.x) >= blockSize)
+                    if (Mathf.Abs(PastTouch.x - CurrentTouch.x) >= blockSize)
                     {
                         if (PastTouch.x > CurrentTouch.x && CheckWallKick(-blockSize))
                         {
@@ -207,7 +208,7 @@ public class Movement : MonoBehaviour
                         }
                     }
                 }
-                
+
             }
             else if (touchPhase == TouchPhase.Ended)
             {
@@ -232,14 +233,18 @@ public class Movement : MonoBehaviour
         }
     }
 
-    void EndedTouch() {
-        if(!StationaryTouch && countTimetouch <= 0.3f && speed == 70)
+    void EndedTouch()
+    {
+        if (!StationaryTouch && countTimetouch <= 0.3f && speed == 70)
         {
             speed = 300;
             enabledTouch = false;
-        } else speed = 5;
+            PlayTrailRenderer();
 
-        if(!TouchMove)
+        }
+        else speed = 5;
+
+        if (!TouchMove)
         {
             RotateBlock();
         }
@@ -262,5 +267,39 @@ public class Movement : MonoBehaviour
         );
 
         return worldPoint;
+    }
+
+    void PlayTrailRenderer()
+    {
+        foreach (Transform child in transform)
+        {
+            bool haveBlockUpper = CheckBlock(child);
+            if (!haveBlockUpper)
+            {
+                TrailRenderer trailRenderer = child.GetComponent<TrailRenderer>();
+                trailRenderer.enabled = true;
+            }
+        }
+    }
+
+    bool CheckBlock(Transform child)
+    {
+        foreach (Transform item in transform)
+        {
+            if (item.position.x == child.position.x && item.position.y > child.position.y)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void StopTrailRenderer()
+    {
+        foreach (Transform child in transform)
+        {
+            child.GetComponent<TrailRenderer>().enabled = false;
+        }
     }
 }
