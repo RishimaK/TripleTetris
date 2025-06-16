@@ -51,11 +51,13 @@ public class GameManager : MonoBehaviour
     {
         currentMap = (int)saveDataJson.GetData("OpenedMap");
         if(currentMap >= saveDataJson.TakeMapData().map.Length) currentMap--;
+        // int[] RandomRange = saveDataJson.TakeMapData().map[currentMap].RandomRange;
         string[] listFind = saveDataJson.TakeMapData().map[currentMap].ListFind;
         int[] valueFind = saveDataJson.TakeMapData().map[currentMap].ValueFind;
-        float listFindLength = listFind.Length;
+        float listFindLength = listFind == null ? 1 : listFind.Length;
         float blockSize = 125;
         float pos = 0;
+        float distanceBetweenItem = blockSize / 3;
 
         float ListBlockToFindX = ListBlockToFind.transform.parent.parent.GetComponent<RectTransform>().sizeDelta.x;
 
@@ -66,16 +68,20 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            ListBlockToFind.GetComponent<RectTransform>().sizeDelta = new Vector2(blockSize * listFindLength, 0);
+            ListBlockToFind.GetComponent<RectTransform>().sizeDelta = new Vector2((blockSize + distanceBetweenItem) * listFindLength - distanceBetweenItem, 0);
         }
 
-        for (int i = 0 ; i < listFindLength; i++)
+        for (int i = 0; i < listFindLength; i++)
         {
             Transform newBlock = ObjectPoolManager.SpawnObject(blockToFindPrefab, Vector3.zero, Quaternion.identity).transform;
             newBlock.SetParent(ListBlockToFind.transform);
             newBlock.localScale = Vector3.one;
-            // newBlock.localPosition = new Vector3 (65 + (blockSize + 65)* i, 0, 0);
-            newBlock.localPosition = new Vector3 (blockSize / 2 + pos + (blockSize + pos) * i, 0, 0);
+
+            if(pos == 0) newBlock.localPosition = new Vector3(blockSize / 2  + (blockSize + distanceBetweenItem) * i, 0, 0);
+            else newBlock.localPosition = new Vector3(blockSize / 2 + pos + (blockSize + pos) * i, 0, 0);
+
+            // if (listFind == null) newBlock.name = $"{UnityEngine.Random.Range(RandomRange[0], RandomRange[1] + 1)}";
+            // else
             newBlock.name = listFind[i];
 
             newBlock.GetChild(1).GetComponent<TextMeshProUGUI>().text = $"0/{valueFind[i]}";
@@ -241,3 +247,24 @@ public class GameManager : MonoBehaviour
         StopGame();
     }
 }
+
+
+// ,
+//         {
+//             "MapName": 10,
+//             "BlockList": [
+//                 [0, 0, -1, 0, 0, 0, -1, 0, 0],
+//                 [0, 0, -1, 0, 0, 0, -1, 0, 0],
+//                 [0, 0, -1, -1, 0, -1, -1, 0, 0],
+//                 [0, 0, -1, -1, 0, -1, -1, 0, 0],
+//                 [0, 0, -1, -1, 0, -1, -1, 0, 0],
+//                 [0, 0, -1, -1, 0, -1, -1, 0, 0],
+//                 [0, -1, -1, -1, 0, -1, -1, -1, 0],
+//                 [0, -1, -1, -1, 0, -1, -1, -1, 0],
+//                 [0, -1, -1, -1, 0, -1, -1, -1, 0],
+//                 [0, -1, -1, -1, 0, -1, -1, -1, 0]
+//             ],
+//             "ListFind": null,
+//             "ValueFind": [30],
+//             "RandomRange": [3,7]
+//         }

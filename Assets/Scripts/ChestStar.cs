@@ -110,7 +110,7 @@ public class ChestStar : MonoBehaviour
             child.localScale = Vector3.zero;
 
             child.GetComponent<RectTransform>().DOLocalMove(new Vector3(-canvasWidth / 2 + posX * (i + 1), 480, 0), 0.5f).SetDelay(0.2f * i);
-            child.DOScale(Vector3.one, 0.5f).SetDelay(0.2f * i);
+            child.DOScale(1.2f, 0.5f).SetDelay(0.2f * i);
 
             Image childImage = child.GetComponent<Image>();
             if(ran == 1)

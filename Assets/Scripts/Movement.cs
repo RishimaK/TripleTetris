@@ -179,12 +179,12 @@ public class Movement : MonoBehaviour
                 else if (PastTouch.y > CurrentTouch.y)
                 {
                     // move down
-                    // if(PastTouch.y - CurrentTouch.y >= blockSize)
-                    // {
-                    speed = 70;
-                    TouchMove = true;
+                    if(PastTouch.y - CurrentTouch.y >= blockSize / 2)
+                    {
+                        speed = 70;
+                        TouchMove = true;
                     // PastTouch -= new Vector2(0, blockSize);
-                    // }
+                    }
                 }
             }
             else if (touchPhase == TouchPhase.Stationary)

@@ -49,6 +49,11 @@ public class Win : MonoBehaviour
         anim2.gameObject.SetActive(true);
         anim1.AnimationState.SetAnimation(0, "animation", false);
         anim2.AnimationState.SetAnimation(0, "animation", true);
+        Invoke("PlaySecondAnim", 1);
+    }
+    void PlaySecondAnim()
+    {
+        anim1.AnimationState.SetAnimation(0, "animation2", true);
     }
 
     IEnumerator PlayScoreAnimation (float waitTime)

@@ -18,7 +18,7 @@ public class Home : MonoBehaviour
     {
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
-        // saveDataJson.SaveData("OpenedMap", 1);
+        saveDataJson.SaveData("OpenedMap", 3);
 
         dailyReward.CheckDailylyReward();
         CheckStar();

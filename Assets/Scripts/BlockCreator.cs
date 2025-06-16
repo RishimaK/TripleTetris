@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,7 @@ public class BlockCreator : MonoBehaviour
     public GameObject PoolBlock;
     private SupportTools supportTools;
     private GameManager gameManager;
+    private List<GameObject> ListPlayerBlock = new List<GameObject>();
     // public ObjectPoolManager objectPoolManager;
 
     public TextureResources textureResources;
@@ -74,7 +76,6 @@ public class BlockCreator : MonoBehaviour
     {
         gameObject.GetComponent<SupportTools>().Initialize(FirstBlockPosition, blockSize);
         PlayerBlock.GetComponent<Movement>().Initialize(FirstBlockPosition, blockSize, MapFrame.transform.position.y);
-        RandomRange = saveDataJson.TakeMapData().map[map].RandomRange;
     }
 
 
@@ -270,6 +271,8 @@ public class BlockCreator : MonoBehaviour
 #region Create Map
     public void CreateLever (int map)
     {
+        RandomRange = saveDataJson.TakeMapData().map[map].RandomRange;
+        ListPlayerBlock.Clear();
         Vector2 landmarkPocation = GetLandmarkPocation();
         GameObject firstBlock = ObjectPoolManager.SpawnObject(blockPrefab, blockPrefab.transform.position, Quaternion.identity);
         Transform ListBlockTransform = ListBlock.transform;
@@ -310,6 +313,8 @@ public class BlockCreator : MonoBehaviour
                     int x = blockListDataHigh - i - 1;
                     if (blockListData[x][j] == 0) continue;
                     int randomTexture = blockListData[x][j];
+
+                    if(randomTexture == -1) randomTexture = Random.Range(RandomRange[0], RandomRange[1] + 1);
 
                     Texture texture = textureResources.ListBlockTexture.FirstOrDefault(x => x.name == $"{randomTexture}");
                     if (ListBlockTransform.transform.childCount == 0) newBlock = firstBlock;
@@ -438,9 +443,11 @@ public class BlockCreator : MonoBehaviour
         return true;
     }
 
-    public void LockPlayerBlock()
+    public void LockPlayerBlock(string txt = "")
     {
         List<GameObject> listChildBlock = new List<GameObject>();
+        ListPlayerBlock.Clear();
+        isPlayerBlockMoveDown = false;
 
         int total = PlayerBlock.transform.childCount;
         for(int i = 0; i < 1;)
@@ -451,7 +458,8 @@ public class BlockCreator : MonoBehaviour
             Vector3 childPosition = child.position;
             int x = Mathf.RoundToInt((childPosition.y - FirstBlockPosition.y) / blockSize);
             int y = Mathf.RoundToInt((childPosition.x - FirstBlockPosition.x) / blockSize);
-            if(grid[x,y] == null && x < 16) grid[x,y] = child.gameObject;
+
+            if (grid[x, y] == null && x < 16) grid[x, y] = child.gameObject;
             else
             {
                 LoseGame();
@@ -459,6 +467,7 @@ public class BlockCreator : MonoBehaviour
             }
 
             child.position = new Vector3(FirstBlockPosition.x + y * blockSize, FirstBlockPosition.y + x * blockSize, child.position.z);
+            ListPlayerBlock.Add(child.gameObject);
             child.SetParent(ListBlock.transform);
             listChildBlock.Add(child.gameObject);
         }
@@ -487,7 +496,7 @@ public class BlockCreator : MonoBehaviour
             if(largestTime > time) time = largestTime;
         }
         
-        if (time == 0) CreateRandomBlock();
+        if (time == 0) WaitForMove();
         else StartCoroutine(CheckGrid(time * 0.1f + 0.3f));
     }
 
@@ -527,6 +536,8 @@ public class BlockCreator : MonoBehaviour
         return time;
     }
 
+    bool isPlayerBlockMoveDown = false;
+
     IEnumerator CheckGrid(float time, string txt = null)
     {
         int timer = 0;
@@ -556,11 +567,16 @@ public class BlockCreator : MonoBehaviour
             }
         }
 
-        if(txt == null) Invoke("WaitForMove", 0.1f * (float)timer);
-        else if (txt != null)
-        {
-            Invoke("DisableTouchInSupportTools",  0.1f * (float)timer);
-        }
+        if (isPlayerBlockMoveDown) Invoke("CheckPlayerBlockAgain", 0.1f * (float)timer);
+        else if (txt == null) Invoke("WaitForMove", 0.1f * (float)timer);
+        else if (txt != null) Invoke("DisableTouchInSupportTools", 0.1f * (float)timer);
+    }
+
+    void CheckPlayerBlockAgain()
+    {
+        List<GameObject> listChildBlock = ListPlayerBlock;
+        isPlayerBlockMoveDown = false;
+        CheckListBlock(listChildBlock);
     }
 
     void DisableTouchInSupportTools()
@@ -598,6 +614,7 @@ public class BlockCreator : MonoBehaviour
                 int x = Mathf.RoundToInt((child.transform.position.y - FirstBlockPosition.y) / blockSize);
                 int y = Mathf.RoundToInt((child.transform.position.x - FirstBlockPosition.x) / blockSize);
                 grid[x, y] = null;
+                if(!isPlayerBlockMoveDown && ListPlayerBlock.Contains(child)) isPlayerBlockMoveDown = true;
 
                 child.transform.DOMove(new Vector3(child.transform.position.x, FirstBlockPosition.y + (x - shortest) * blockSize, child.transform.position.z), 0.1f * shortest);
             }
@@ -848,40 +865,6 @@ public class BlockCreator : MonoBehaviour
         }
         return true;
     }
-
-    // public void MoveBlockToGround()
-    // {
-    //     List<GameObject> nearbyBlocks = new List<GameObject>();
-    //     int shortest = 16;
-
-    //     foreach(Transform child in PlayerBlock.transform)
-    //     {
-    //         nearbyBlocks.Add(child.gameObject);
-
-    //         int x = Mathf.RoundToInt((child.position.y - FirstBlockPosition.y) / blockSize);
-    //         int y = Mathf.RoundToInt((child.position.x - FirstBlockPosition.x) / blockSize);
-    //         if(x - 1 >= 0 && grid[x - 1, y] != null) continue;
-    //         int count = 0;
-    //         for(int i = x - 1; i >= 0; i--)
-    //         {
-    //             if(grid[i, y] == null) count++;
-    //             else break;
-    //         }
-
-    //         if(shortest > count) shortest = count;
-    //     }
-
-    //     foreach(GameObject child in nearbyBlocks)
-    //     {
-    //         int x = Mathf.RoundToInt((child.transform.position.y - FirstBlockPosition.y) / blockSize);
-    //         int y = Mathf.RoundToInt((child.transform.position.x - FirstBlockPosition.x) / blockSize);
-
-    //         child.transform.DOMove(new Vector3(child.transform.position.x, FirstBlockPosition.y + (x - shortest) * blockSize, child.transform.position.z), 0.1f * (float)shortest).OnComplete(() => {
-    //             grid[x - shortest, y] = child;
-    //         });
-    //     }
-    //     Invoke("LockPlayerBlock", 0.05f * (float)shortest);
-    // }
 
     public float CheckNextPosition(float distance)
     {
