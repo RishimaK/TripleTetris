@@ -16,6 +16,7 @@ public class PlayerData
     public int Hammer = 0;
     public int Rainbow = 0;
     public int OpenedMap = 1;
+    public int CurrentTheme = 1;
 
     public string DailyReward = null;
     public int DailyRewardStack = 0;
@@ -31,7 +32,7 @@ public class PlayerData
     public void SetPlayerData
     (
         bool removeAds = false, bool rate = false, bool music = true, bool sound = true, bool vibration = true,
-        int star = 0,int gold = 0, int boom = 0, int tnt = 0, int hammer = 0, int rainbow = 0, int openedMap = 1,
+        int star = 0,int gold = 0, int boom = 0, int tnt = 0, int hammer = 0, int rainbow = 0, int openedMap = 1, int currentTheme = 1,
         string dailyReward = null, int dailyRewardStack = 0, int piggyBank = 0, int chestStar = 0
     )
     {
@@ -49,6 +50,7 @@ public class PlayerData
         Rainbow = rainbow;
 
         OpenedMap = openedMap;
+        CurrentTheme = currentTheme;
 
         DailyReward = dailyReward;
         DailyRewardStack = dailyRewardStack;
@@ -86,6 +88,7 @@ public class PlayerData
                 case nameof(Hammer): Hammer = (int)(object)val; break;
                 case nameof(Rainbow): Rainbow = (int)(object)val; break;
                 case nameof(OpenedMap): OpenedMap = (int)(object)val; break;
+                case nameof(CurrentTheme): CurrentTheme = (int)(object)val; break;
                 case nameof(DailyReward): DailyReward = val as string; break;
                 case nameof(DailyRewardStack): DailyRewardStack = (int)(object)val; break;
                 case nameof(PiggyBank): PiggyBank = (int)(object)val; break;

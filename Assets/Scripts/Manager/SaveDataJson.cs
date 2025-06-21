@@ -17,10 +17,6 @@ public class SaveDataJson : MonoBehaviour
     public TextAsset jsonMapData;
     public MapList MapData = new MapList();
 
-    public class row
-    {
-        List<int> data;
-    }
     [Serializable]public class Map
     {
         public int MapName;
@@ -31,12 +27,27 @@ public class SaveDataJson : MonoBehaviour
     }
     [Serializable]public class MapList
     {
-            public Map[] map;
+        public Map[] map;
+    }
+
+
+    [Header("Map Shape List")]
+    public TextAsset MapShapeListJson;
+    public MapShapeListData MapShapeList = new MapShapeListData();
+
+    [Serializable]public class MapShape
+    {
+        public int[][] Map;
+    }
+    [Serializable]public class MapShapeListData
+    {
+            public MapShape[] MapList;
     }
     
     void Awake()
     {
         MapData = JsonConvert.DeserializeObject<MapList>(jsonMapData.text);
+        MapShapeList = JsonConvert.DeserializeObject<MapShapeListData>(MapShapeListJson.text);
 
         playerData = PlayerData.Instance;
         string nameGame = "TripleTetris";
@@ -82,7 +93,7 @@ public class SaveDataJson : MonoBehaviour
         playerData.SetPlayerData
         (
             data.RemoveAds, data.Rate, data.Music, data.Sound, data.Vibration,
-            data.Star, data.Gold, data.Boom, data.TNT, data.Hammer, data.Rainbow, data.OpenedMap,
+            data.Star, data.Gold, data.Boom, data.TNT, data.Hammer, data.Rainbow, data.OpenedMap, data.CurrentTheme,
             data.DailyReward, data.DailyRewardStack, data.PiggyBank, data.ChestStar
         );
 
@@ -105,6 +116,7 @@ public class SaveDataJson : MonoBehaviour
             { "Hammer", () => data.Hammer},
             { "Rainbow", () => data.Rainbow},
             { "OpenedMap", () => data.OpenedMap},
+            { "CurrentTheme", () => data.CurrentTheme},
             { "DailyReward", () => data.DailyReward},
             { "DailyRewardStack", () => data.DailyRewardStack},
             { "PiggyBank", () => data.PiggyBank},
@@ -127,11 +139,16 @@ public class SaveDataJson : MonoBehaviour
     {
         return MapData;
     }
+    
+    public MapShapeListData TakeMapShapeList()
+    {
+        return MapShapeList;
+    }
 
     public void SaveData(string name, object val, int mapNum = 0)
     {
         // lưu dữ liệu tại thời gian thực
-        if(name == "AddMoreItem" || name == "ShowAllItem") playerData.SetPlayerData(name, val, mapNum);
+        if (name == "AddMoreItem" || name == "ShowAllItem") playerData.SetPlayerData(name, val, mapNum);
         else playerData.SetPlayerData(name, val);
         SaveDataToJsonFile();
     }

@@ -22,25 +22,27 @@ public class GameManager : MonoBehaviour
 
     private int currentMap = 0;
     private BlockCreator blockCreator;
-    
+
     void Start()
     {
-        blockCreator = GetComponent<BlockCreator>();
     }
 
     public void Initialize()
     {
+        blockCreator = GetComponent<BlockCreator>();
+
         gameObject.SetActive(true);
         GameUI.SetActive(true);
 
         SetListBlockToFind();
         SetTool();
-        GetComponent<BlockCreator>().CreateLever(currentMap);
+        // currentMap = (int)saveDataJson.GetData("OpenedMap");
+        blockCreator.CreateLever(currentMap);
     }
 
     void SetTool()
     {
-        foreach(Transform child in ListTool.transform)
+        foreach (Transform child in ListTool.transform)
         {
             child.GetChild(1).GetChild(0).GetComponent<TextMeshProUGUI>().text =
                 $"{(int)saveDataJson.GetData(child.name)}";
@@ -50,10 +52,18 @@ public class GameManager : MonoBehaviour
     void SetListBlockToFind()
     {
         currentMap = (int)saveDataJson.GetData("OpenedMap");
-        if(currentMap >= saveDataJson.TakeMapData().map.Length) currentMap--;
+        // if(!blockCreator.CheckMapLimit(currentMap)) currentMap--;
         // int[] RandomRange = saveDataJson.TakeMapData().map[currentMap].RandomRange;
-        string[] listFind = saveDataJson.TakeMapData().map[currentMap].ListFind;
-        int[] valueFind = saveDataJson.TakeMapData().map[currentMap].ValueFind;
+
+        string[] listFind = new string[] { };
+        int[] valueFind = new int[] { };
+        if (currentMap < saveDataJson.TakeMapData().map.Length)
+        {
+            listFind = saveDataJson.TakeMapData().map[currentMap].ListFind;
+            valueFind = saveDataJson.TakeMapData().map[currentMap].ValueFind;
+        }
+        else (listFind, valueFind) = SetListItemToFind();
+
         float listFindLength = listFind == null ? 1 : listFind.Length;
         float blockSize = 125;
         float pos = 0;
@@ -61,9 +71,9 @@ public class GameManager : MonoBehaviour
 
         float ListBlockToFindX = ListBlockToFind.transform.parent.parent.GetComponent<RectTransform>().sizeDelta.x;
 
-        if(listFindLength * blockSize < ListBlockToFindX)
+        if (listFindLength * blockSize < ListBlockToFindX)
         {
-            pos = (ListBlockToFindX  - (listFindLength * blockSize)) / (listFindLength + 1);
+            pos = (ListBlockToFindX - (listFindLength * blockSize)) / (listFindLength + 1);
             ListBlockToFind.GetComponent<RectTransform>().sizeDelta = new Vector2(ListBlockToFindX, 0);
         }
         else
@@ -71,23 +81,25 @@ public class GameManager : MonoBehaviour
             ListBlockToFind.GetComponent<RectTransform>().sizeDelta = new Vector2((blockSize + distanceBetweenItem) * listFindLength - distanceBetweenItem, 0);
         }
 
+        int theme = (int)saveDataJson.GetData("CurrentTheme");
+
         for (int i = 0; i < listFindLength; i++)
         {
             Transform newBlock = ObjectPoolManager.SpawnObject(blockToFindPrefab, Vector3.zero, Quaternion.identity).transform;
             newBlock.SetParent(ListBlockToFind.transform);
             newBlock.localScale = Vector3.one;
 
-            if(pos == 0) newBlock.localPosition = new Vector3(blockSize / 2  + (blockSize + distanceBetweenItem) * i, 0, 0);
+            if (pos == 0) newBlock.localPosition = new Vector3(blockSize / 2 + (blockSize + distanceBetweenItem) * i, 0, 0);
             else newBlock.localPosition = new Vector3(blockSize / 2 + pos + (blockSize + pos) * i, 0, 0);
 
-            // if (listFind == null) newBlock.name = $"{UnityEngine.Random.Range(RandomRange[0], RandomRange[1] + 1)}";
-            // else
-            newBlock.name = listFind[i];
+            newBlock.name = listFind == null ? "all" : listFind[i];
 
             newBlock.GetChild(1).GetComponent<TextMeshProUGUI>().text = $"0/{valueFind[i]}";
 
             Image img = newBlock.GetChild(0).GetComponent<Image>();
-            img.sprite = textureResources.ListBlockUI.FirstOrDefault(x => x.name == $"{newBlock.name}_icon");
+            img.sprite =
+                listFind == null ? textureResources.ListBlockUI.FirstOrDefault(x => x.name == $"all") :
+                textureResources.ListBlockUI.FirstOrDefault(x => x.name == $"{theme}.{newBlock.name}");
             FitItemSizeToParent(img.GetComponent<RectTransform>());
         }
     }
@@ -102,11 +114,11 @@ public class GameManager : MonoBehaviour
         Vector2 parentSize = item.transform.parent.GetComponent<RectTransform>().sizeDelta;
 
         float scaleRatio = 1;
-        if(itemSize.x >= itemSize.y && itemSize.x != parentSize.x)
+        if (itemSize.x >= itemSize.y && itemSize.x != parentSize.x)
         {
             scaleRatio = parentSize.x / itemSize.x;
         }
-        else if(itemSize.y > itemSize.x && itemSize.y != parentSize.y)
+        else if (itemSize.y > itemSize.x && itemSize.y != parentSize.y)
         {
             scaleRatio = parentSize.y / itemSize.y;
         }
@@ -156,10 +168,10 @@ public class GameManager : MonoBehaviour
     void ResetListToFind()
     {
         int length = ListBlockToFind.transform.childCount;
-        for(int i = 0; i < 1;)
+        for (int i = 0; i < 1;)
         {
             length--;
-            if(length < 0) break;
+            if (length < 0) break;
             Transform block = ListBlockToFind.transform.GetChild(0);
             block.name = "BlockUI";
             ObjectPoolManager.ReturnObjectToPool(block.gameObject);
@@ -170,8 +182,14 @@ public class GameManager : MonoBehaviour
     public void CheckScore(string block, int num)
     {
         Transform item = ListBlockToFind.transform.Find(block);
-        if(item == null) return;
-        TextMeshProUGUI itemText = item.GetChild(1).GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI itemText;
+        if (ListBlockToFind.transform.GetChild(0).name == "all")
+        {
+            itemText = ListBlockToFind.transform.GetChild(0).GetChild(1).GetComponent<TextMeshProUGUI>();
+        }
+        else if (item == null) return;
+        else itemText = item.GetChild(1).GetComponent<TextMeshProUGUI>();
+
         int score = Convert.ToInt32(itemText.text.Split("/")[0]);
         int total = Convert.ToInt32(itemText.text.Split("/")[1]);
         score += num;
@@ -186,14 +204,14 @@ public class GameManager : MonoBehaviour
             TextMeshProUGUI itemText = child.GetChild(1).GetComponent<TextMeshProUGUI>();
             int score = Convert.ToInt32(itemText.text.Split("/")[0]);
             int total = Convert.ToInt32(itemText.text.Split("/")[1]);
-            if(total > score) return;
+            if (total > score) return;
         }
 
         // Debug.Log("WinGame");
         WinGame();
     }
 
-    void WinGame ()
+    void WinGame()
     {
         StopGame();
         saveDataJson.SaveData("OpenedMap", ++currentMap);
@@ -205,7 +223,7 @@ public class GameManager : MonoBehaviour
         win.PlayWinAnimation();
     }
 
-    public void LoseGame ()
+    public void LoseGame()
     {
         StopGame();
         lose.PlayLoseAnimation();
@@ -229,22 +247,51 @@ public class GameManager : MonoBehaviour
 
     public void ReplayGame()
     {
-        GetComponent<BlockCreator>().GameOver();
+        blockCreator.GameOver();
         ResetListToFind();
 
         Invoke("Initialize", 0.1f);
     }
 
-    public void GoToHome ()
+    public void GoToHome()
     {
-        GetComponent<BlockCreator>().GameOver();
+        blockCreator.GameOver();
         GameOver();
     }
 
-    public void OpenSettingDialog ()
+    public void OpenSettingDialog()
     {
         setting.PlayShowDialog();
         StopGame();
+    }
+
+    (string[], int[]) SetListItemToFind()
+    {
+        float mapa = (float)currentMap % 20f;
+        switch (mapa)
+        {
+            case 1: return (new string[] { "1", "4" }, new int[] { 8, 9 });
+            case 2: return (new string[] { "5", "6", "7" }, new int[] { 9, 12, 9 });
+            case 3: return (new string[] { "5", "3", "4" }, new int[] { 9, 15, 12 });
+            case 4: return (new string[] { "7", "4" }, new int[] { 17, 15 });
+            case 5: return (new string[] { "3", "4" }, new int[] { 16, 18 });
+            case 6: return (new string[] { "6", "7" }, new int[] { 21, 3 });
+            case 7: return (new string[] { "3", "4", "5" }, new int[] { 12, 8, 10 });
+            case 8: return (new string[] { "4", "5", "6", "7" }, new int[] { 15, 5, 20, 8 });
+            case 9: return (new string[] { "5" }, new int[] { 18 });
+            case 10: return (null, new int[] { 35 });
+            case 11: return (new string[] { "4", "7" }, new int[] { 12, 7 });
+            case 12: return (new string[] { "1", "2", "3", "4" }, new int[] { 13, 6, 7, 14 });
+            case 13: return (new string[] { "4" }, new int[] { 24 });
+            case 14: return (new string[] { "5", "2", "3" }, new int[] { 14, 16 , 12 });
+            case 15: return (new string[] { "3", "5", "7" }, new int[] { 15, 15, 15 });
+            case 16: return (new string[] { "5", "8" }, new int[] { 17, 8 });
+            case 17: return (new string[] { "6", "7" }, new int[] { 3, 20 });
+            case 18: return (new string[] { "4", "5", "8", "7" }, new int[] { 21, 15, 18, 7 });
+            case 19: return (new string[] { "1", "2" }, new int[] { 10, 10 });
+            case 0: return (null, new int[] { 50 });
+            default: return (null, new int[] { 30 });
+        }
     }
 }
 

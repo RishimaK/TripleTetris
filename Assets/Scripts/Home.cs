@@ -1,9 +1,20 @@
+// using System;
 using Spine.Unity;
 using TMPro;
 using UnityEngine;
 
+public class IntArrayWrapper
+{
+    public int[] array;
+    
+    public IntArrayWrapper(int[] arr)
+    {
+        array = arr;
+    }
+}
 public class Home : MonoBehaviour
 {
+    BlockCreator blockCreator;
     public GameManager gameManager;
     public SaveDataJson saveDataJson;
 
@@ -18,10 +29,28 @@ public class Home : MonoBehaviour
     {
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
-        saveDataJson.SaveData("OpenedMap", 3);
-
+        // saveDataJson.SaveData("OpenedMap", 10);
+        blockCreator = gameManager.GetComponent<BlockCreator>();
         dailyReward.CheckDailylyReward();
+        // CreateRandomMap();
         CheckStar();
+    }
+
+    void CreateRandomMap()
+    {
+        int[] A = new int[] {};
+
+        for (int i = 0; i < 5000; i++)
+        {
+            int ALength = A.Length;
+            System.Array.Resize(ref A, A.Length + 1);
+            int ran = Random.Range(0, saveDataJson.TakeMapShapeList().MapList.Length);
+            A[ALength] = ran;
+        }
+
+        IntArrayWrapper wrapper = new IntArrayWrapper(A);
+        string json = JsonUtility.ToJson(wrapper);
+        Debug.Log(json);
     }
 
     public void StartGameBtn(SkeletonGraphic btn)
@@ -41,7 +70,8 @@ public class Home : MonoBehaviour
     public void CheckStar()
     {
         int currentMap = (int)saveDataJson.GetData("OpenedMap");
-        if (currentMap >= saveDataJson.TakeMapData().map.Length) currentMap--;
+        // if (currentMap >= saveDataJson.TakeMapData().map.Length) currentMap--;
+        // if(! blockCreator.CheckMapLimit(currentMap))currentMap--;
         LeverText.text = $"{currentMap}";
 
         star.text = $"{(int)saveDataJson.GetData("Star")}";

@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Threading.Tasks;
+using Spine.Unity;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +18,10 @@ public class SupportTools : MonoBehaviour
     Vector3 FirstBlockPosition;
     float BlockSize;
     string ToolType = "";
+
+    public SkeletonGraphic TNTAnim;
+    public SkeletonGraphic HammerAnim;
+    public SkeletonGraphic BoomAnim;
     
     void Start()
     {
@@ -162,10 +169,9 @@ public class SupportTools : MonoBehaviour
 
     Vector2 CurrentTouch = new Vector2(1000, 1000);
 
-    void Update()
+    async void Update()
     {
         if(!enabledTouch) return;
-        Debug.Log("??");
         
         if (Input.touchCount > 0)
         {
@@ -191,13 +197,19 @@ public class SupportTools : MonoBehaviour
                 switch (ToolType)
                 {
                     case "Boom":
-                        isUseTool = blockCreator.ActiveBoom(x, y);
+                        StartCoroutine(SetToolAnimation(BoomAnim, CurrentTouch));
+                        isUseTool = await ActiveBoomAsync();
+                        // isUseTool = blockCreator.ActiveBoom();
                         break;
                     case "TNT":
-                        isUseTool = blockCreator.DeleteVerticalRow(x, y);
+                        StartCoroutine(SetToolAnimation(TNTAnim, CurrentTouch));
+                        isUseTool = await DeleteVerticalRowAsync();
+                        // isUseTool = blockCreator.DeleteVerticalRow();
                         break;
                     case "Hammer":
-                        isUseTool = blockCreator.DeleteHorizontalRow(x, y);
+                        StartCoroutine(SetToolAnimation(HammerAnim, CurrentTouch));
+                        isUseTool = await DeleteHorizontalRowwAsync();
+                        // isUseTool = blockCreator.DeleteHorizontalRow();
                         break;
                 }
 
@@ -210,6 +222,35 @@ public class SupportTools : MonoBehaviour
                 }
             }
         }
+    }
+
+    async Task<bool> DeleteVerticalRowAsync()
+    {
+        await Task.Delay(1500);
+        return blockCreator.DeleteVerticalRow();
+    }
+
+    async Task<bool> DeleteHorizontalRowwAsync()
+    {
+        await Task.Delay(1500);
+        return blockCreator.DeleteHorizontalRow();
+    }
+
+    async Task<bool> ActiveBoomAsync()
+    {
+        await Task.Delay(600);
+        return blockCreator.ActiveBoom();
+    }
+
+    IEnumerator SetToolAnimation(SkeletonGraphic toolAnim, Vector2 CurrentTouch)
+    {
+        toolAnim.gameObject.SetActive(true);
+        toolAnim.transform.position = new Vector3(CurrentTouch.x, CurrentTouch.y, toolAnim.transform.position.z);
+        toolAnim.AnimationState.SetAnimation(0, "animation", false);
+        yield return new WaitForSeconds(toolAnim.AnimationState.GetCurrent(0).Animation.Duration);
+        toolAnim.gameObject.SetActive(false);
+        toolAnim.AnimationState.ClearTracks();
+        toolAnim.Skeleton.SetToSetupPose();
     }
 
     public void DisableTouch()
